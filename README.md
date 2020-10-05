@@ -16,6 +16,10 @@ For development, install the package in a new conda environment as follows:
 conda env create -f environment.yml
 conda activate pytg
 pip install -e .
-python -m ipykernel install --user --name pytg --display-name pytg
 ```
 
+If developing with jupyter notebook/lab it may be convenient to install the kernel as follows:
+```
+conda activate pytg
+python -m ipykernel install --user --name pytg --display-name pytg
+```
