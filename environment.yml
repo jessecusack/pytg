@@ -1,0 +1,11 @@
+name: pytg
+dependencies:
+  - python>3.5
+  - numpy
+  - scipy
+  - matplotlib
+  - ipython
+  - ipykernel
+  - pip
+  - pip:
+      - findiff
