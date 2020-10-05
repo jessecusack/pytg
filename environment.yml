@@ -7,5 +7,7 @@ dependencies:
   - ipython
   - ipykernel
   - pip
+  - black
+  - isort
   - pip:
       - findiff

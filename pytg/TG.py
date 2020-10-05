@@ -1,12 +1,25 @@
-import numpy as np
 import findiff as fd
+import numpy as np
 from scipy.linalg import eig
 
 
-def vTG(z, u, v, b, k, l, Kv, Kb, BCv_upper="rigid", BCv_lower="rigid", BCb_upper="constant", BCb_lower="constant"):
+def vTG(
+    z,
+    u,
+    v,
+    b,
+    k,
+    l,
+    Kv,
+    Kb,
+    BCv_upper="rigid",
+    BCv_lower="rigid",
+    BCb_upper="constant",
+    BCb_lower="constant",
+):
     """
     Solver for the viscous Taylor Goldstein equation for the case of constant viscous/diffusive coefficients.
-    
+
     Parameters
     ----------
         z : array
@@ -32,8 +45,8 @@ def vTG(z, u, v, b, k, l, Kv, Kb, BCv_upper="rigid", BCv_lower="rigid", BCb_uppe
         BCb_upper : string
             Upper boundary condition on buoyancy, either "constant" (default) or "insulating".
         BCb_lower : string
-            Lower boundary condition on buoyancy, either "constant" (default) or "insulating". 
-            
+            Lower boundary condition on buoyancy, either "constant" (default) or "insulating".
+
     Returns
     -------
         om : array
@@ -42,22 +55,26 @@ def vTG(z, u, v, b, k, l, Kv, Kb, BCv_upper="rigid", BCv_lower="rigid", BCb_uppe
             Eigenvectors of vertical velocity.
         bvec : 2d array
             Eigenvectors of buoyancy.
-            
+
     """
-    
+
     z = np.asarray(z)
     u = np.asarray(u)
     v = np.asarray(v)
     b = np.asarray(b)
-    
+
     if not (z.size == u.size == v.size == b.size):
-        raise ValueError("Size of z, u, v and b must be equal, z.size = {}, u.size = {}, v.size = {}, b.size = {}.".format(z.size, u.size, v.size, b.size))
-    
+        raise ValueError(
+            "Size of z, u, v and b must be equal, z.size = {}, u.size = {}, v.size = {}, b.size = {}.".format(
+                z.size, u.size, v.size, b.size
+            )
+        )
+
     dz = z[1] - z[0]
     # check for equally spaced z
     if not np.all(np.diff(z) == dz):
         raise ValueError("z values are not equally spaced.")
-        
+
     flip_data = False
     if dz < 0:
         flip_data = True
@@ -65,10 +82,10 @@ def vTG(z, u, v, b, k, l, Kv, Kb, BCv_upper="rigid", BCv_lower="rigid", BCb_uppe
         u = np.flipud(u)
         v = np.flipud(v)
         b = np.flipud(b)
-        
+
     N = u.size
-    kh = np.sqrt(k**2 + l**2)  # Absolute horizontal wavenumber
-    
+    kh = np.sqrt(k ** 2 + l ** 2)  # Absolute horizontal wavenumber
+
     # Velocity component parallel to the wave vector (k, l)
     U = u * k / kh + v * l / kh
 
@@ -87,11 +104,11 @@ def vTG(z, u, v, b, k, l, Kv, Kb, BCv_upper="rigid", BCv_lower="rigid", BCb_uppe
     # Add boundary conditions to matrix
     # Impermeable boundary
     dz2[0, :] = 0
-    dz2[0, 0] = -2/dz**2
-    dz2[0, 1] = 1/dz**2
+    dz2[0, 0] = -2 / dz ** 2
+    dz2[0, 1] = 1 / dz ** 2
     dz2[-1, :] = 0
-    dz2[-1, -1] = -2/dz**2
-    dz2[-1, -2] = 1/dz**2
+    dz2[-1, -1] = -2 / dz ** 2
+    dz2[-1, -2] = 1 / dz ** 2
 
     # % Asymptotic boundary
     # % D2(1,:)=0;
@@ -105,85 +122,101 @@ def vTG(z, u, v, b, k, l, Kv, Kb, BCv_upper="rigid", BCv_lower="rigid", BCb_uppe
         BCv1 = 0
     elif BCv_upper == "frictionless":
         BCv1 = 1
-        
+    else:
+        raise ValueError(
+            "BCv_upper incorrectly specified, it must be either 'rigid' or 'frictionless'."
+        )
+
     if BCv_lower == "rigid":
         BCvN = 0
     elif BCv_lower == "frictionless":
         BCvN = 1
+    else:
+        raise ValueError(
+            "BCv_lower incorrectly specified, it must be either 'rigid' or 'frictionless'."
+        )
 
     # % Rigid or frictionless BCs for 4th derivative
     dz4[0, :] = 0
-    dz4[0, 0] = (5 + 2*BCv1)/dz**4
-    dz4[0, 1] = -4/dz**4
-    dz4[0, 2] = 1/dz**4
+    dz4[0, 0] = (5 + 2 * BCv1) / dz ** 4
+    dz4[0, 1] = -4 / dz ** 4
+    dz4[0, 2] = 1 / dz ** 4
     dz4[1, :] = 0
-    dz4[1, 0] = -4/dz**4
-    dz4[1, 1] = 6/dz**4
-    dz4[1, 2] = -4/dz**4
-    dz4[1, 3] = 1/dz**4
+    dz4[1, 0] = -4 / dz ** 4
+    dz4[1, 1] = 6 / dz ** 4
+    dz4[1, 2] = -4 / dz ** 4
+    dz4[1, 3] = 1 / dz ** 4
     dz4[-1, :] = 0
-    dz4[-1, -1] = (5 + 2*BCvN)/dz**4
-    dz4[-1, -2] = -4/dz**4
-    dz4[-1, -3] = 1/dz**4
+    dz4[-1, -1] = (5 + 2 * BCvN) / dz ** 4
+    dz4[-1, -2] = -4 / dz ** 4
+    dz4[-1, -3] = 1 / dz ** 4
     dz4[-2, :] = 0
-    dz4[-2, -1] = -4/dz**4
-    dz4[-2, -2] = 6/dz**4
-    dz4[-2, -3] = -4/dz**4
-    dz4[-2, -4] = 1/dz**4
-    
+    dz4[-2, -1] = -4 / dz ** 4
+    dz4[-2, -2] = 6 / dz ** 4
+    dz4[-2, -3] = -4 / dz ** 4
+    dz4[-2, -4] = 1 / dz ** 4
+
     # Boundary conditions for the second derivative of buoyancy.
     dz2b = dz2.copy()
-    
+
     if BCb_upper == "constant":
-        dz2b[0, :] = 0;
-        dz2b[0, 0] = -2/dz**2
-        dz2b[0, 1] = 1/dz**2
+        dz2b[0, :] = 0
+        dz2b[0, 0] = -2 / dz ** 2
+        dz2b[0, 1] = 1 / dz ** 2
     elif BCb_upper == "insulating":
-        dz2b[0, :] = 0;
-        dz2b[0, 0] = -2/(3*dz**2)
-        dz2b[0, 1] = 2/(3*dz**2)
-        
+        dz2b[0, :] = 0
+        dz2b[0, 0] = -2 / (3 * dz ** 2)
+        dz2b[0, 1] = 2 / (3 * dz ** 2)
+    else:
+        raise ValueError(
+            "BCb_upper incorrectly specified, it must be either 'constant' or 'insulating'."
+        )
+
     if BCb_lower == "constant":
-        dz2b[-1, :] = 0;
-        dz2b[-1, -1] = -2/dz**2
-        dz2b[-1, -2] = 1/dz**2
+        dz2b[-1, :] = 0
+        dz2b[-1, -1] = -2 / dz ** 2
+        dz2b[-1, -2] = 1 / dz ** 2
     elif BCb_lower == "insulating":
-        dz2b[-1, :] = 0;
-        dz2b[-1, -1] = -2/(3*dz**2)
-        dz2b[-1, -2] = 2/(3*dz**2)
+        dz2b[-1, :] = 0
+        dz2b[-1, -1] = -2 / (3 * dz ** 2)
+        dz2b[-1, -2] = 2 / (3 * dz ** 2)
+    else:
+        raise ValueError(
+            "BCb_lower incorrectly specified, it must be either 'constant' or 'insulating'."
+        )
 
     # Assemble stability matrices for eigenvalue computation
     Id = np.eye(N)
-    L = dz2 - Id*kh**2  # Laplacian
-    Lb = dz2b - Id*kh**2  # Laplacian for buoyancy
-    LL = dz4 - 2*dz2*kh**2 + Id*kh**4  # Laplacian of laplacian
+    L = dz2 - Id * kh ** 2  # Laplacian
+    Lb = dz2b - Id * kh ** 2  # Laplacian for buoyancy
+    LL = dz4 - 2 * dz2 * kh ** 2 + Id * kh ** 4  # Laplacian of laplacian
 
     A = np.block([[L, np.zeros_like(L)], [np.zeros_like(L), Id]])
 
-    b11 = -1j*k*np.diag(U)@L + 1j*k*np.diag(Uzz) + Kv*LL
+    b11 = -1j * k * np.diag(U) @ L + 1j * k * np.diag(Uzz) + Kv * LL
     b21 = -np.diag(bz)
-    b12 = -Id*kh**2
-    b22 = -1j*k*np.diag(U) + Kb*Lb
+    b12 = -Id * kh ** 2
+    b22 = -1j * k * np.diag(U) + Kb * Lb
 
     B = np.block([[b11, b12], [b21, b22]])
 
-    # Solve system using eig which returns om the imaginary frequency and vec the eigenvectors. 
+    # Solve system using eig which returns om the imaginary frequency and vec the eigenvectors.
     om, vec = eig(B, A)
-    
+
     # Prepare output
     # Sort output by phase speed
-    cp = -om.imag/kh
+    cp = -om.imag / kh
     idxs = np.argsort(cp)
-    
+
     cp = cp[idxs]
     om = om[idxs]
     vec = vec[:, idxs]
 
     wvec = vec[:N, :]
     bvec = vec[N:, :]
-    
+
     if flip_data:
         wvec = np.filpud(wvec)
         bvec = np.flipud(bvec)
-    
+
     return om, wvec, bvec
