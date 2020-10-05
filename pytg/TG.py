@@ -215,8 +215,11 @@ def vTG(
     wvec = vec[:N, :]
     bvec = vec[N:, :]
 
+    d_dz = fd.FinDiff(0, dz, 1, acc=5)
+    uvec = 1j * d_dz(wvec) / k
+
     if flip_data:
-        wvec = np.filpud(wvec)
+        wvec = np.flipud(wvec)
         bvec = np.flipud(bvec)
 
-    return om, wvec, bvec
+    return om, wvec, bvec, uvec
