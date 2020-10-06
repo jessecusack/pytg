@@ -48,8 +48,6 @@ axs[2].set_xlabel("$b$ (m s$^{-2}$)")
 # Try the module.
 
 # %%
-
-
 dat = np.loadtxt("Nash_data.txt", comments="%")
 u = dat[:, 0]
 rho = 1000.0 * dat[:, 1]
@@ -62,6 +60,9 @@ Kb = Kv / 7
 # Wavenumber
 k = 1e-4
 l = 0.0
+
+# %%
+
 
 om, wvec, bvec, uvec = TG.vTG(
     z,
@@ -92,3 +93,32 @@ axs[1].plot(bvec[:, 0].real, z)
 axs[2].plot(uvec[:, 0].real, z)
 
 # %%
+om, wvec, bvec, uvec = TG.vTG_sparse(
+    z,
+    u,
+    u * 0,
+    b,
+    k,
+    l,
+    Kv,
+    Kb,
+    BCv_upper="rigid",
+    BCv_lower="rigid",
+    BCb_upper="constant",
+    BCb_lower="constant",
+    nmodes=10,
+    which="LM",
+)
+cp = -om.imag / k
+
+fig, ax = plt.subplots(1, 1)
+ax.plot(cp, ".")
+ax.set_xlabel("Mode")
+
+fig, axs = plt.subplots(1, 3, sharey=True)
+axs[0].plot(wvec[:, -1].real, z)
+axs[1].plot(bvec[:, -1].real, z)
+axs[2].plot(uvec[:, -1].real, z)
+axs[0].plot(wvec[:, 0].real, z)
+axs[1].plot(bvec[:, 0].real, z)
+axs[2].plot(uvec[:, 0].real, z)
