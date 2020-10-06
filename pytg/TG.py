@@ -1,5 +1,6 @@
 import findiff as fd
 import numpy as np
+import scipy.sparse as sparse
 from scipy.linalg import eig
 
 
@@ -221,5 +222,6 @@ def vTG(
     if flip_data:
         wvec = np.flipud(wvec)
         bvec = np.flipud(bvec)
+        uvec = np.flipud(uvec)
 
     return om, wvec, bvec, uvec
