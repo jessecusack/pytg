@@ -6,7 +6,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.5.1
+#       jupytext_version: 1.11.2
 #   kernelspec:
 #     display_name: pytg
 #     language: python
@@ -62,9 +62,7 @@ k = 1e-4
 l = 0.0
 
 # %%
-
-
-om, wvec, bvec, uvec = TG.vTG(
+om, wvec, bvec, uvec, pvec = TG.vTG(
     z,
     u,
     u * 0,
@@ -84,13 +82,16 @@ fig, ax = plt.subplots(1, 1)
 ax.plot(cp, ".")
 ax.set_xlabel("Mode")
 
-fig, axs = plt.subplots(1, 3, sharey=True)
+fig, axs = plt.subplots(1, 4, sharey=True)
 axs[0].plot(wvec[:, -1].real, z)
 axs[1].plot(bvec[:, -1].real, z)
 axs[2].plot(uvec[:, -1].real, z)
+axs[3].plot(pvec[:, -1].real, z)
 axs[0].plot(wvec[:, 0].real, z)
 axs[1].plot(bvec[:, 0].real, z)
 axs[2].plot(uvec[:, 0].real, z)
+axs[3].plot(pvec[:, 0].real, z)
+axs[3].set_xlim(-3, 3)
 
 # %%
 om, wvec, bvec, uvec = TG.vTG_sparse(
