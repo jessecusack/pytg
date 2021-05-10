@@ -229,7 +229,7 @@ def vTG(
         wvec = np.flipud(wvec)
         bvec = np.flipud(bvec)
         uvec = np.flipud(uvec)
-        pvec = np.flupud(pvec)
+        pvec = np.flipud(pvec)
 
     return om, wvec, bvec, uvec, pvec
 
