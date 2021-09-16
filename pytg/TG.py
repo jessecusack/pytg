@@ -216,10 +216,10 @@ def vTG(
     wvec = vec[:N, :]
     bvec = vec[N:, :]
 
-    d_dz = fd.FinDiff(0, dz, 1, acc=5)
+    d_dz = fd.FinDiff(0, dz, 1, acc=4)
     uvec = 1j * d_dz(wvec) / k
     
-    d2_dz2 = fd.FinDiff(0, dz, 2, acc=5)
+    d2_dz2 = fd.FinDiff(0, dz, 2, acc=4)
     X1 = d_dz(U)[:, np.newaxis] * wvec
     X2 = (cp[np.newaxis, :] - U[:, np.newaxis]) * d_dz(wvec)
     X3 = 1j * Kv * (d2_dz2(d_dz(wvec)) - k*d_dz(wvec)) / k
@@ -447,7 +447,7 @@ def vTG_sparse(
     wvec = vec[:N, :]
     bvec = vec[N:, :]
 
-    d_dz = fd.FinDiff(0, dz, 1, acc=5)
+    d_dz = fd.FinDiff(0, dz, 1, acc=4)
     uvec = 1j * d_dz(wvec) / k
 
     if flip_data:
