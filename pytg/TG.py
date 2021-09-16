@@ -56,6 +56,10 @@ def vTG(
             Eigenvectors of vertical velocity.
         bvec : 2d array
             Eigenvectors of buoyancy.
+        uvec : 2d array
+            Eigenvectors of horizontal velocity.
+        pvec : 2d array
+            Eigenvectors of pressure.
 
     """
 
