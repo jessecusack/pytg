@@ -89,7 +89,7 @@ def vTG(
         b = np.flipud(b)
 
     N = u.size
-    kh = np.sqrt(k ** 2 + l ** 2)  # Absolute horizontal wavenumber
+    kh = np.sqrt(k**2 + l**2)  # Absolute horizontal wavenumber
 
     # Velocity component parallel to the wave vector (k, l)
     U = u * k / kh + v * l / kh
@@ -109,11 +109,11 @@ def vTG(
     # Add boundary conditions to matrix
     # Impermeable boundary
     dz2[0, :] = 0
-    dz2[0, 0] = -2 / dz ** 2
-    dz2[0, 1] = 1 / dz ** 2
+    dz2[0, 0] = -2 / dz**2
+    dz2[0, 1] = 1 / dz**2
     dz2[-1, :] = 0
-    dz2[-1, -1] = -2 / dz ** 2
-    dz2[-1, -2] = 1 / dz ** 2
+    dz2[-1, -1] = -2 / dz**2
+    dz2[-1, -2] = 1 / dz**2
 
     # % Asymptotic boundary
     # % D2(1,:)=0;
@@ -143,35 +143,35 @@ def vTG(
 
     # % Rigid or frictionless BCs for 4th derivative
     dz4[0, :] = 0
-    dz4[0, 0] = (5 + 2 * BCv1) / dz ** 4
-    dz4[0, 1] = -4 / dz ** 4
-    dz4[0, 2] = 1 / dz ** 4
+    dz4[0, 0] = (5 + 2 * BCv1) / dz**4
+    dz4[0, 1] = -4 / dz**4
+    dz4[0, 2] = 1 / dz**4
     dz4[1, :] = 0
-    dz4[1, 0] = -4 / dz ** 4
-    dz4[1, 1] = 6 / dz ** 4
-    dz4[1, 2] = -4 / dz ** 4
-    dz4[1, 3] = 1 / dz ** 4
+    dz4[1, 0] = -4 / dz**4
+    dz4[1, 1] = 6 / dz**4
+    dz4[1, 2] = -4 / dz**4
+    dz4[1, 3] = 1 / dz**4
     dz4[-1, :] = 0
-    dz4[-1, -1] = (5 + 2 * BCvN) / dz ** 4
-    dz4[-1, -2] = -4 / dz ** 4
-    dz4[-1, -3] = 1 / dz ** 4
+    dz4[-1, -1] = (5 + 2 * BCvN) / dz**4
+    dz4[-1, -2] = -4 / dz**4
+    dz4[-1, -3] = 1 / dz**4
     dz4[-2, :] = 0
-    dz4[-2, -1] = -4 / dz ** 4
-    dz4[-2, -2] = 6 / dz ** 4
-    dz4[-2, -3] = -4 / dz ** 4
-    dz4[-2, -4] = 1 / dz ** 4
+    dz4[-2, -1] = -4 / dz**4
+    dz4[-2, -2] = 6 / dz**4
+    dz4[-2, -3] = -4 / dz**4
+    dz4[-2, -4] = 1 / dz**4
 
     # Boundary conditions for the second derivative of buoyancy.
     dz2b = dz2.copy()
 
     if BCb_upper == "constant":
         dz2b[0, :] = 0
-        dz2b[0, 0] = -2 / dz ** 2
-        dz2b[0, 1] = 1 / dz ** 2
+        dz2b[0, 0] = -2 / dz**2
+        dz2b[0, 1] = 1 / dz**2
     elif BCb_upper == "insulating":
         dz2b[0, :] = 0
-        dz2b[0, 0] = -2 / (3 * dz ** 2)
-        dz2b[0, 1] = 2 / (3 * dz ** 2)
+        dz2b[0, 0] = -2 / (3 * dz**2)
+        dz2b[0, 1] = 2 / (3 * dz**2)
     else:
         raise ValueError(
             "BCb_upper incorrectly specified, it must be either 'constant' or 'insulating'."
@@ -179,12 +179,12 @@ def vTG(
 
     if BCb_lower == "constant":
         dz2b[-1, :] = 0
-        dz2b[-1, -1] = -2 / dz ** 2
-        dz2b[-1, -2] = 1 / dz ** 2
+        dz2b[-1, -1] = -2 / dz**2
+        dz2b[-1, -2] = 1 / dz**2
     elif BCb_lower == "insulating":
         dz2b[-1, :] = 0
-        dz2b[-1, -1] = -2 / (3 * dz ** 2)
-        dz2b[-1, -2] = 2 / (3 * dz ** 2)
+        dz2b[-1, -1] = -2 / (3 * dz**2)
+        dz2b[-1, -2] = 2 / (3 * dz**2)
     else:
         raise ValueError(
             "BCb_lower incorrectly specified, it must be either 'constant' or 'insulating'."
@@ -192,15 +192,15 @@ def vTG(
 
     # Assemble stability matrices for eigenvalue computation
     Id = np.eye(N)
-    L = dz2 - Id * kh ** 2  # Laplacian
-    Lb = dz2b - Id * kh ** 2  # Laplacian for buoyancy
-    LL = dz4 - 2 * dz2 * kh ** 2 + Id * kh ** 4  # Laplacian of laplacian
+    L = dz2 - Id * kh**2  # Laplacian
+    Lb = dz2b - Id * kh**2  # Laplacian for buoyancy
+    LL = dz4 - 2 * dz2 * kh**2 + Id * kh**4  # Laplacian of laplacian
 
     A = np.block([[L, np.zeros_like(L)], [np.zeros_like(L), Id]])
 
     b11 = -1j * k * np.diag(U) @ L + 1j * k * np.diag(Uzz) + Kv * LL
     b21 = -np.diag(bz)
-    b12 = -Id * kh ** 2
+    b12 = -Id * kh**2
     b22 = -1j * k * np.diag(U) + Kb * Lb
 
     B = np.block([[b11, b12], [b21, b22]])
@@ -222,11 +222,11 @@ def vTG(
 
     d_dz = fd.FinDiff(0, dz, 1, acc=4)
     uvec = 1j * d_dz(wvec) / k
-    
+
     d2_dz2 = fd.FinDiff(0, dz, 2, acc=4)
     X1 = d_dz(U)[:, np.newaxis] * wvec
     X2 = (cp[np.newaxis, :] - U[:, np.newaxis]) * d_dz(wvec)
-    X3 = 1j * Kv * (d2_dz2(d_dz(wvec)) - k*d_dz(wvec)) / k
+    X3 = 1j * Kv * (d2_dz2(d_dz(wvec)) - k * d_dz(wvec)) / k
     pvec = 1j * (X1 + X2 - X3) / k
 
     if flip_data:
@@ -325,7 +325,7 @@ def vTG_sparse(
         b = np.flipud(b)
 
     N = u.size
-    kh = np.sqrt(k ** 2 + l ** 2)  # Absolute horizontal wavenumber
+    kh = np.sqrt(k**2 + l**2)  # Absolute horizontal wavenumber
 
     # Velocity component parallel to the wave vector (k, l)
     U = u * k / kh + v * l / kh
@@ -345,11 +345,11 @@ def vTG_sparse(
     # Add boundary conditions to matrix
     # Impermeable boundary
     dz2[0, :] = 0
-    dz2[0, 0] = -2 / dz ** 2
-    dz2[0, 1] = 1 / dz ** 2
+    dz2[0, 0] = -2 / dz**2
+    dz2[0, 1] = 1 / dz**2
     dz2[-1, :] = 0
-    dz2[-1, -1] = -2 / dz ** 2
-    dz2[-1, -2] = 1 / dz ** 2
+    dz2[-1, -1] = -2 / dz**2
+    dz2[-1, -2] = 1 / dz**2
 
     if BCv_upper == "rigid":
         BCv1 = 0
@@ -371,35 +371,35 @@ def vTG_sparse(
 
     # % Rigid or frictionless BCs for 4th derivative
     dz4[0, :] = 0
-    dz4[0, 0] = (5 + 2 * BCv1) / dz ** 4
-    dz4[0, 1] = -4 / dz ** 4
-    dz4[0, 2] = 1 / dz ** 4
+    dz4[0, 0] = (5 + 2 * BCv1) / dz**4
+    dz4[0, 1] = -4 / dz**4
+    dz4[0, 2] = 1 / dz**4
     dz4[1, :] = 0
-    dz4[1, 0] = -4 / dz ** 4
-    dz4[1, 1] = 6 / dz ** 4
-    dz4[1, 2] = -4 / dz ** 4
-    dz4[1, 3] = 1 / dz ** 4
+    dz4[1, 0] = -4 / dz**4
+    dz4[1, 1] = 6 / dz**4
+    dz4[1, 2] = -4 / dz**4
+    dz4[1, 3] = 1 / dz**4
     dz4[-1, :] = 0
-    dz4[-1, -1] = (5 + 2 * BCvN) / dz ** 4
-    dz4[-1, -2] = -4 / dz ** 4
-    dz4[-1, -3] = 1 / dz ** 4
+    dz4[-1, -1] = (5 + 2 * BCvN) / dz**4
+    dz4[-1, -2] = -4 / dz**4
+    dz4[-1, -3] = 1 / dz**4
     dz4[-2, :] = 0
-    dz4[-2, -1] = -4 / dz ** 4
-    dz4[-2, -2] = 6 / dz ** 4
-    dz4[-2, -3] = -4 / dz ** 4
-    dz4[-2, -4] = 1 / dz ** 4
+    dz4[-2, -1] = -4 / dz**4
+    dz4[-2, -2] = 6 / dz**4
+    dz4[-2, -3] = -4 / dz**4
+    dz4[-2, -4] = 1 / dz**4
 
     # Boundary conditions for the second derivative of buoyancy.
     dz2b = dz2.copy()
 
     if BCb_upper == "constant":
         dz2b[0, :] = 0
-        dz2b[0, 0] = -2 / dz ** 2
-        dz2b[0, 1] = 1 / dz ** 2
+        dz2b[0, 0] = -2 / dz**2
+        dz2b[0, 1] = 1 / dz**2
     elif BCb_upper == "insulating":
         dz2b[0, :] = 0
-        dz2b[0, 0] = -2 / (3 * dz ** 2)
-        dz2b[0, 1] = 2 / (3 * dz ** 2)
+        dz2b[0, 0] = -2 / (3 * dz**2)
+        dz2b[0, 1] = 2 / (3 * dz**2)
     else:
         raise ValueError(
             "BCb_upper incorrectly specified, it must be either 'constant' or 'insulating'."
@@ -407,12 +407,12 @@ def vTG_sparse(
 
     if BCb_lower == "constant":
         dz2b[-1, :] = 0
-        dz2b[-1, -1] = -2 / dz ** 2
-        dz2b[-1, -2] = 1 / dz ** 2
+        dz2b[-1, -1] = -2 / dz**2
+        dz2b[-1, -2] = 1 / dz**2
     elif BCb_lower == "insulating":
         dz2b[-1, :] = 0
-        dz2b[-1, -1] = -2 / (3 * dz ** 2)
-        dz2b[-1, -2] = 2 / (3 * dz ** 2)
+        dz2b[-1, -1] = -2 / (3 * dz**2)
+        dz2b[-1, -2] = 2 / (3 * dz**2)
     else:
         raise ValueError(
             "BCb_lower incorrectly specified, it must be either 'constant' or 'insulating'."
@@ -420,15 +420,15 @@ def vTG_sparse(
 
     # Assemble stability matrices for eigenvalue computation
     Id = np.eye(N)
-    L = dz2 - Id * kh ** 2  # Laplacian
-    Lb = dz2b - Id * kh ** 2  # Laplacian for buoyancy
-    LL = dz4 - 2 * dz2 * kh ** 2 + Id * kh ** 4  # Laplacian of laplacian
+    L = dz2 - Id * kh**2  # Laplacian
+    Lb = dz2b - Id * kh**2  # Laplacian for buoyancy
+    LL = dz4 - 2 * dz2 * kh**2 + Id * kh**4  # Laplacian of laplacian
 
     A = np.block([[L, np.zeros_like(L)], [np.zeros_like(L), Id]])
 
     b11 = -1j * k * np.diag(U) @ L + 1j * k * np.diag(Uzz) + Kv * LL
     b21 = -np.diag(bz)
-    b12 = -Id * kh ** 2
+    b12 = -Id * kh**2
     b22 = -1j * k * np.diag(U) + Kb * Lb
 
     B = np.block([[b11, b12], [b21, b22]])
