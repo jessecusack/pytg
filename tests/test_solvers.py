@@ -107,8 +107,8 @@ def test_viscous_taylor_goldstein():
     k = 0.4
     U = UPW(z, h, U0)
 
-    _, gr, cp, _, _, _, _ = s.viscous_taylor_goldstein(
-        z, U, 0 * U, 0 * U, k + 0 * 1j, 0, 0, 0, acc=acc
+    _, gr, cp, _, _, _, _, _ = s.viscous_taylor_goldstein(
+        z, U, 0 * U, 0 * U, k, 0, 0, 0, acc=acc
     )
     mode_fastest = np.argmax(gr)
 

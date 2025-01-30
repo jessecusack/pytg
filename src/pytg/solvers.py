@@ -99,9 +99,9 @@ def rayleigh(z, U, k, acc=4):
 @check_and_reshape_args(4)
 def viscous_taylor_goldstein(
     z,
-    u,
-    v,
-    b,
+    U,
+    V,
+    B,
     k,
     l,
     Kv,
@@ -113,17 +113,17 @@ def viscous_taylor_goldstein(
     acc=4,
 ):
     dz = ensure_equidistant_grid(z)
-    n = u.size
+    n = U.size
     kh = np.sqrt(k**2 + l**2)  # Absolute horizontal wavenumber
     # Velocity component parallel to the wave vector (k, l)
-    U = u * k / kh + v * l / kh
+    U = U * k / kh + V * l / kh
 
     # Derivative matrices
     D1 = fd.derivative_matrix(n, 1, acc, dz)
     D2 = fd.derivative_matrix(n, 2, acc, dz)
 
     # Shear and buoyancy frequency.
-    bz = D1 @ b
+    Bz = D1 @ B
     Uzz = D2 @ U
 
     # Create matrices with boundary conditions
@@ -144,7 +144,7 @@ def viscous_taylor_goldstein(
         + 1j * k * np.diag(np.squeeze(Uzz))
         + Kv * LL
     )
-    b21 = -np.diag(np.squeeze(bz))
+    b21 = -np.diag(np.squeeze(Bz))
     b12 = -I * kh**2
     b22 = -1j * k * np.diag(np.squeeze(U)) + Kb * Lb
 
@@ -155,20 +155,25 @@ def viscous_taylor_goldstein(
     isort = np.argsort(-om.imag)  # equivalent to sorting by cp
     om = om[isort]
     vec = vec[:, isort]
-    wvec = vec[:n, :].real
-    bvec = vec[n:, :].real
+    w = vec[:n, :]
+    b = vec[n:, :]
 
     cp = -om.imag / k  # Phase speed
     gr = om.real  # Growth rate
     freq = om.imag  # Frequency
 
     d_dz = FinDiff(0, dz, 1, acc=acc)
-    uvec = 1j * d_dz(wvec) / k
-
     d2_dz2 = FinDiff(0, dz, 2, acc=acc)
-    X1 = d_dz(U)[:, np.newaxis] * wvec
-    X2 = (cp[np.newaxis, :] - U[:, np.newaxis]) * d_dz(wvec)
-    X3 = 1j * Kv * (d2_dz2(d_dz(wvec)) - k * d_dz(wvec)) / k
-    pvec = 1j * (X1 + X2 - X3) / k
 
-    return freq, gr, cp, wvec, bvec, uvec, pvec
+    Uvec = 1j * d_dz(w) / k
+
+    theta = np.arctan2(l, k)
+    u = Uvec * np.cos(theta)
+    v = Uvec * np.sin(theta)
+
+    X1 = d_dz(U) * w
+    X2 = (cp - U) * d_dz(w)
+    X3 = 1j * Kv * (d2_dz2(d_dz(w)) - k * d_dz(w)) / k
+    p = 1j * (X1 + X2 - X3) / k
+
+    return freq, gr, cp, w.real, b.real, u.real, v.real, p.real
