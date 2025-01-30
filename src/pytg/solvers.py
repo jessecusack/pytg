@@ -7,6 +7,7 @@ from . import finite_difference as fd
 # from scipy.sparse import eye
 # from scipy.sparse.linalg import eigs
 from scipy.linalg import eig
+from findiff import FinDiff
 
 
 def check_and_reshape(arr, position):
@@ -58,6 +59,8 @@ def ensure_equidistant_grid(z):
     dz = z[1] - z[0]
     if not np.allclose(np.diff(z), dz, rtol=1e-5, atol=1e-8):
         raise ValueError("z must be equidistant")
+    if dz < 0:
+        raise ValueError("z must be monotonically increasing")
     return dz
 
 
@@ -67,8 +70,8 @@ def rayleigh(z, U, k, acc=4):
     n = len(z)
 
     # Differentiate U
-    d2dz2 = fd.derivative_matrix(n, 2, acc, dz)
-    d2Udz2 = d2dz2 @ U
+    D2 = fd.derivative_matrix(n, 2, acc, dz)
+    Uzz = D2 @ U
 
     # Matrix to differentiate W
     DW2 = fd.derivative_matrix(n, 2, acc, dz, "fixed", "fixed")
@@ -76,7 +79,7 @@ def rayleigh(z, U, k, acc=4):
     # Solve the eigenvalue problem
     I = np.eye(n)  # noqa: E741
     A = DW2 - k**2 * I
-    B = -1j * k * U * A + 1j * k * d2Udz2 * I
+    B = -1j * k * U * A + 1j * k * Uzz * I
     om, vec = eig(B, A)
 
     # If using sparse:
@@ -91,3 +94,81 @@ def rayleigh(z, U, k, acc=4):
     freq = om.imag  # Frequency
 
     return freq, gr, cp, w
+
+
+@check_and_reshape_args(4)
+def viscous_taylor_goldstein(
+    z,
+    u,
+    v,
+    b,
+    k,
+    l,
+    Kv,
+    Kb,
+    vbc_top="rigid",
+    vbc_bot="rigid",
+    bbc_top="fixed",
+    bbc_bot="fixed",
+    acc=4,
+):
+    dz = ensure_equidistant_grid(z)
+    n = u.size
+    kh = np.sqrt(k**2 + l**2)  # Absolute horizontal wavenumber
+    # Velocity component parallel to the wave vector (k, l)
+    U = u * k / kh + v * l / kh
+
+    # Derivative matrices
+    D1 = fd.derivative_matrix(n, 1, acc, dz)
+    D2 = fd.derivative_matrix(n, 2, acc, dz)
+
+    # Shear and buoyancy frequency.
+    bz = D1 @ b
+    Uzz = D2 @ U
+
+    # Create matrices with boundary conditions
+    DW2 = fd.derivative_matrix(n, 2, acc, dz, "fixed", "fixed")  # Impermeable
+    DW4 = fd.derivative_matrix(n, 4, acc, dz, vbc_top, vbc_bot)
+    DB2 = fd.derivative_matrix(n, 2, acc, dz, bbc_top, bbc_bot)
+
+    # Assemble matrices for eigenvalue computation
+    I = np.eye(n)  # noqa: E741
+    L = DW2 - I * kh**2  # Laplacian
+    Lb = DB2 - I * kh**2  # Laplacian for buoyancy
+    LL = DW4 - 2 * DW2 * kh**2 + I * kh**4  # Laplacian of laplacian
+
+    A = np.block([[L, np.zeros_like(L)], [np.zeros_like(L), I]])
+
+    b11 = (
+        -1j * k * np.diag(np.squeeze(U)) @ L
+        + 1j * k * np.diag(np.squeeze(Uzz))
+        + Kv * LL
+    )
+    b21 = -np.diag(np.squeeze(bz))
+    b12 = -I * kh**2
+    b22 = -1j * k * np.diag(np.squeeze(U)) + Kb * Lb
+
+    B = np.block([[b11, b12], [b21, b22]])
+
+    om, vec = eig(B, A)
+
+    isort = np.argsort(-om.imag)  # equivalent to sorting by cp
+    om = om[isort]
+    vec = vec[:, isort]
+    wvec = vec[:n, :].real
+    bvec = vec[n:, :].real
+
+    cp = -om.imag / k  # Phase speed
+    gr = om.real  # Growth rate
+    freq = om.imag  # Frequency
+
+    d_dz = FinDiff(0, dz, 1, acc=acc)
+    uvec = 1j * d_dz(wvec) / k
+
+    d2_dz2 = FinDiff(0, dz, 2, acc=acc)
+    X1 = d_dz(U)[:, np.newaxis] * wvec
+    X2 = (cp[np.newaxis, :] - U[:, np.newaxis]) * d_dz(wvec)
+    X3 = 1j * Kv * (d2_dz2(d_dz(wvec)) - k * d_dz(wvec)) / k
+    pvec = 1j * (X1 + X2 - X3) / k
+
+    return freq, gr, cp, wvec, bvec, uvec, pvec
