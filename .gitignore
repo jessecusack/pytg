@@ -26,6 +26,7 @@ share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.venv
 
 # Installer logs
 pip-log.txt
@@ -45,6 +46,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+.ruff_cache
 
 # Sphinx documentation
 docs/_build/
