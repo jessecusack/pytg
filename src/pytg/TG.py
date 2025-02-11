@@ -313,7 +313,7 @@ def vTG_sparse(
 
     dz = z[1] - z[0]
     # check for equally spaced z
-    if not np.all(np.diff(z) == dz):
+    if not np.all(np.isclose(np.diff(z), dz)):
         raise ValueError("z values are not equally spaced.")
 
     flip_data = False
