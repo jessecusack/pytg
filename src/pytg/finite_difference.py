@@ -57,19 +57,21 @@ def bc_none(mat, order, acc, boundary="top"):
 
 
 def bc_fixed(mat, order, acc, boundary="top"):
-    # This function generates
+    """Fixed boundary conditions may be applied. """
     n, _ = num_coefs(order, acc)
     nside = n // 2
     if boundary == "top":
         for i in range(nside):
-            mat[i, : n - 1] = coefficients(
-                order, offsets=[j for j in range(-i - 1, n - i - 1)]
-            )["coefficients"][1:]
+            coef = coefficients(
+                order, acc
+            )["center"]["coefficients"]
+            mat[i, :nside+i+1] = coef[nside-i:]
     elif boundary == "bot":
         for i in range(nside):
-            mat[-i - 1, 1 - n :] = coefficients(
-                order, offsets=[j for j in range(i + 2 - n, i + 2)]
-            )["coefficients"][:-1]
+            coef = coefficients(
+                order, acc
+            )["center"]["coefficients"]
+            mat[-i - 1,  -nside-i-1:] = coef[:-nside+i]
     else:
         raise ValueError("Boundary condition must be either 'top' or 'bot'.")
     return mat
