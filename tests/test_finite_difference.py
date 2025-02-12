@@ -106,7 +106,7 @@ def test_bc_fixed():
     mat = fd.bc_fixed(np.zeros((5, 5)), order=1, acc=4, boundary="top")
     mat_o1_a4 = np.array(
         [
-            [-5 / 6, 3 / 2, -1 / 2, 1 / 12, 0],
+            [0, 2 / 3, -1 / 12, 0, 0],
             [-2 / 3, 0, 2 / 3, -1 / 12, 0],
             [0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0],
